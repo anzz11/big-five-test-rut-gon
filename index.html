@@ -3,264 +3,757 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Big Five Personality Test (BFPT)</title>
+    <title>Big Five Personality Test (Soft Paper)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; }
-        .intro { background-color: #e8f4fd; padding: 15px; border-left: 5px solid #3498db; margin-bottom: 20px; }
-        .question-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        .question-text { font-weight: bold; margin-bottom: 10px; display: block; }
-        .options { display: flex; justify-content: space-between; max-width: 400px; }
-        .options label { cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 0.85em; }
-        .options input { margin-bottom: 5px; cursor: pointer; }
-        
-        button#submit-btn { display: block; width: 100%; padding: 15px; background-color: #27ae60; color: white; border: none; border-radius: 5px; font-size: 1.2em; cursor: pointer; transition: background 0.3s; margin-top: 30px;}
-        button#submit-btn:hover { background-color: #219150; }
+        :root {
+            /* Palette: Soft & Warm */
+            --primary: #6366f1; 
+            --primary-dark: #4f46e5;
+            
+            /* Background colors */
+            --bg-body: #FDFCF8; /* Soft Paper */
+            --bg-dot: #E7E5E4;
+            --card-bg: #FFFFFF;
+            
+            --text-main: #292524;
+            --text-sub: #78716C;
+            --border: #F5F5F4;
+            
+            --main-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
 
-        /* Kết quả */
-        #results { display: none; margin-top: 30px; }
-        .trait-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .trait-title { font-size: 1.4em; color: #2980b9; margin-bottom: 10px; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px;}
-        .score-bar-container { background-color: #ecf0f1; border-radius: 10px; height: 25px; width: 100%; margin: 10px 0; overflow: hidden; }
-        .score-bar { height: 100%; background-color: #3498db; width: 0%; transition: width 1s ease-in-out; text-align: right; color: white; padding-right: 10px; line-height: 25px; font-weight: bold; }
-        .trait-desc { font-style: italic; color: #555; font-size: 0.95em; margin-top: 10px; }
-        .analysis { margin-top: 10px; color: #333; }
-        .error { color: red; text-align: center; font-weight: bold; display: none; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            line-height: 1.6; 
+            background-color: var(--bg-body);
+            background-image: radial-gradient(var(--bg-dot) 1px, transparent 1px);
+            background-size: 32px 32px;
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 20px; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { 
+            max-width: 850px; 
+            margin: 20px auto; 
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 50px; 
+            border-radius: 24px; 
+            box-shadow: 0 20px 40px -10px rgba(60, 60, 60, 0.05); 
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.9);
+        }
+
+        /* Typography */
+        h1 { 
+            text-align: center; 
+            background: var(--main-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 10px 0;
+            font-weight: 800; 
+            font-size: 2.2rem;
+            letter-spacing: -0.03em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-sub);
+            margin-bottom: 45px;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        /* Progress Bar */
+        .progress-wrapper {
+            position: sticky;
+            top: 0;
+            background: rgba(253, 252, 248, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 15px 0 25px 0;
+            z-index: 20;
+            margin: 0 -50px 30px -50px; 
+            padding-left: 50px;
+            padding-right: 50px;
+            border-bottom: 1px solid rgba(0,0,0,0.02);
+            transition: all 0.3s;
+        }
         
-        /* Mobile responsive */
+        .progress-container {
+            width: 100%;
+            background-color: #F0EFEA;
+            border-radius: 99px;
+            height: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--main-gradient);
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 99px;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .page-indicator {
+            text-align: right;
+            font-size: 0.8em;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Question Cards */
+        .question-item { 
+            background: #fff;
+            margin-bottom: 30px; 
+            opacity: 0;
+            transform: translateY(15px);
+            animation: slideUpFade 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .question-item:nth-child(1) { animation-delay: 0.05s; }
+        .question-item:nth-child(2) { animation-delay: 0.1s; }
+        .question-item:nth-child(3) { animation-delay: 0.15s; }
+        .question-item:nth-child(4) { animation-delay: 0.2s; }
+        .question-item:nth-child(5) { animation-delay: 0.25s; }
+        .question-item:nth-child(6) { animation-delay: 0.3s; }
+
+        @keyframes slideUpFade {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-text { 
+            font-weight: 700; 
+            font-size: 1.2em;
+            margin-bottom: 18px; 
+            display: block; 
+            color: var(--text-main);
+        }
+
+        /* Options Grid */
+        .options { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 12px;
+        }
+
+        .option-label { 
+            cursor: pointer; 
+            position: relative;
+        }
+
+        .option-label input { 
+            position: absolute; opacity: 0; cursor: pointer;
+        }
+
+        .option-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 5px;
+            border-radius: 16px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #FFFFFF;
+            border: 2px solid #F5F5F4;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .option-number {
+            font-size: 1.3em;
+            font-weight: 800;
+            color: #D6D3D1;
+            margin-bottom: 4px;
+            transition: color 0.2s;
+        }
+
+        .option-text {
+            font-size: 0.7em;
+            color: #A8A29E;
+            text-align: center;
+            line-height: 1.2;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        /* Hover & Active States */
+        .option-label:hover .option-box {
+            border-color: #C7D2FE;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .option-label input[value="1"]:checked + .option-box { background-color: #FAFAFA; border-color: #A8A29E; }
+        .option-label input[value="1"]:checked + .option-box .option-number,
+        .option-label input[value="1"]:checked + .option-box .option-text { color: #57534E; }
+
+        .option-label input[value="2"]:checked + .option-box { background-color: #F5F3FF; border-color: #A5B4FC; }
+        .option-label input[value="2"]:checked + .option-box .option-number,
+        .option-label input[value="2"]:checked + .option-box .option-text { color: #818CF8; }
+
+        .option-label input[value="3"]:checked + .option-box { background-color: #EEF2FF; border-color: #818CF8; }
+        .option-label input[value="3"]:checked + .option-box .option-number,
+        .option-label input[value="3"]:checked + .option-box .option-text { color: #6366F1; }
+
+        .option-label input[value="4"]:checked + .option-box { background-color: #E0E7FF; border-color: #6366F1; }
+        .option-label input[value="4"]:checked + .option-box .option-number,
+        .option-label input[value="4"]:checked + .option-box .option-text { color: #4F46E5; }
+
+        .option-label input[value="5"]:checked + .option-box { 
+            background: var(--main-gradient); border-color: transparent;
+            box-shadow: 0 8px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+        .option-label input[value="5"]:checked + .option-box .option-number,
+        .option-label input[value="5"]:checked + .option-box .option-text { color: #FFFFFF; opacity: 0.95; }
+
+
+        /* Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px dashed #E7E5E4;
+        }
+
+        button {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .btn-prev { background-color: #F5F5F4; color: #78716C; }
+        .btn-prev:hover { background-color: #E7E5E4; color: #44403C; }
+        .btn-prev:disabled { opacity: 0; pointer-events: none; }
+
+        .btn-next { 
+            background: var(--main-gradient); color: white; 
+            box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.4); 
+        }
+        .btn-next:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 12px 25px -8px rgba(99, 102, 241, 0.5); 
+        }
+
+        .btn-submit { 
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; 
+            box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.4); 
+        }
+        .btn-submit:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 12px 25px -8px rgba(16, 185, 129, 0.5); 
+        }
+
+        .error-msg {
+            background: #FFF1F2; color: #E11D48;
+            padding: 15px; border-radius: 12px; margin-top: 20px; 
+            display: none; text-align: center; font-weight: 600;
+            border: 1px solid #FECDD3; animation: shake 0.4s ease-in-out;
+        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+        /* Results & Chart */
+        #results { display: none; }
+        .chart-wrapper { position: relative; height: 450px; margin: 40px auto; padding: 20px; }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .trait-card {
+            background: #fff;
+            border: 1px solid #F5F5F4;
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+        .trait-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: var(--card-color);
+        }
+        .trait-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
+
+        .trait-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .trait-title { font-size: 1.4em; font-weight: 800; color: #292524; }
+        .trait-score { 
+            font-weight: 800; font-size: 1.1em; color: #fff; 
+            background: var(--card-color); padding: 5px 12px; border-radius: 99px;
+        }
+        
+        .score-track { background: #F5F5F4; height: 8px; border-radius: 99px; margin: 20px 0; overflow: hidden; }
+        .score-fill { height: 100%; background: var(--card-color); border-radius: 99px; }
+
+        .advice-box {
+            background: #FAFAFA; padding: 20px; border-radius: 16px; margin-top: 20px; font-size: 0.95em;
+            border: 1px solid #F5F5F4; color: #57534E;
+        }
+        .advice-title { display: block; font-weight: 700; margin-bottom: 5px; color: var(--card-color); text-transform: uppercase; font-size: 0.8em; letter-spacing: 0.05em; }
+
+        .status-popup {
+            position: fixed; top: 20px; right: 20px;
+            padding: 16px 24px; background: #fff;
+            border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            z-index: 1000; display: none; animation: slideInRight 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            font-weight: 600; display: flex; align-items: center; gap: 12px;
+            border-left: 4px solid var(--primary);
+        }
+        @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* --- QUAN TRỌNG: CSS CHO IN ẤN (PDF) --- */
+        @media print {
+            @page { margin: 1cm; size: A4; }
+            body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0 !important; }
+            .container { 
+                box-shadow: none !important; border: none !important; 
+                width: 100% !important; max-width: 100% !important; 
+                margin: 0 !important; padding: 0 !important; background: white !important; 
+            }
+            /* Ẩn các thành phần không cần thiết khi in */
+            .progress-wrapper, .nav-buttons, #bfpt-form, .status-popup, button, .error-msg, .intro { 
+                display: none !important; 
+            }
+            /* Đảm bảo kết quả luôn hiện */
+            #results { display: block !important; }
+            
+            /* Tùy chỉnh biểu đồ và thẻ khi in */
+            .chart-wrapper { max-height: 350px !important; margin: 10px auto !important; }
+            .result-grid { display: block !important; } /* Chuyển grid thành block để tránh ngắt trang xấu */
+            .trait-card { 
+                break-inside: avoid; page-break-inside: avoid; 
+                border: 1px solid #ddd !important; box-shadow: none !important; 
+                margin-bottom: 15px !important; 
+            }
+            h1 { font-size: 20pt !important; color: #000 !important; -webkit-text-fill-color: initial !important; background: none !important; }
+            .subtitle { font-size: 12pt !important; margin-bottom: 10px !important; }
+        }
+
+        /* Mobile */
         @media (max-width: 600px) {
-            .options { flex-direction: row; justify-content: space-between; }
-            .options label span { display: none; } /* Ẩn chữ trên mobile cho gọn */
-            .options label::after { content: attr(data-val); font-size: 0.8em; }
+            .container { padding: 20px 15px; border-radius: 0; box-shadow: none; border: none; margin: 0; background: transparent; backdrop-filter: none; }
+            .progress-wrapper { margin: 0 -15px 20px -15px; padding-left: 20px; padding-right: 20px; background: rgba(253, 252, 248, 0.98); }
+            .option-text { font-size: 0.6em; display: block; } 
+            .options { gap: 8px; }
+            .option-box { padding: 10px 2px; border-radius: 12px; }
+            .option-number { font-size: 1.1em; }
+            .nav-buttons { flex-direction: column-reverse; gap: 12px; }
+            button { width: 100%; justify-content: center; }
+            .chart-wrapper { height: 320px; padding: 0; }
+            h1 { font-size: 1.6rem; }
         }
     </style>
 </head>
 <body>
 
+<div id="status-notification" class="status-popup"></div>
+
 <div class="container">
-    <h1>The Big Five Personality Test (BFPT)</h1>
+    <h1>Big Five Personality Test</h1>
+    <div class="subtitle">Trắc nghiệm tính cách 5 thành tố</div>
     
-    <div class="intro">
-        <p><strong>Hướng dẫn:</strong> Bài trắc nghiệm này giúp bạn hiểu cấu trúc tính cách của mình. Hãy đánh giá mức độ đồng ý của bạn với từng câu phát biểu dưới đây theo thang điểm từ 1 đến 5.</p>
-        <p><em>1 = Rất không đồng ý | 2 = Hơi không đồng ý | 3 = Trung lập | 4 = Hơi đồng ý | 5 = Rất đồng ý</em></p>
-        <p>Hãy bắt đầu mỗi câu với cụm từ: <strong>"Tôi..."</strong></p>
+    <div id="quiz-area">
+        <div class="progress-wrapper">
+            <div class="page-indicator" id="page-indicator">Trang 1 / 5</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <form id="bfpt-form">
+            <div id="questions-container"></div>
+            <div class="error-msg" id="error-msg">Vui lòng hoàn thành tất cả câu hỏi trước khi tiếp tục!</div>
+            <div class="nav-buttons">
+                <button type="button" id="btn-prev" class="btn-prev" onclick="prevPage()">← Quay lại</button>
+                <button type="button" id="btn-next" class="btn-next" onclick="nextPage()">Tiếp tục →</button>
+                <button type="button" id="btn-submit" class="btn-submit" onclick="calculateScore()" style="display: none;">Hoàn tất & Xem kết quả</button>
+            </div>
+        </form>
     </div>
 
-    <form id="bfpt-form">
-        <div id="questions-container"></div>
-        <div class="error" id="error-msg">Vui lòng trả lời tất cả 50 câu hỏi trước khi xem kết quả.</div>
-        <button type="button" id="submit-btn" onclick="calculateScore()">Xem Kết Quả & Phân Tích</button>
-    </form>
-
+    <!-- KHU VỰC KẾT QUẢ -->
     <div id="results">
-        <h2>Kết quả phân tích tính cách của bạn</h2>
-        <p>Điểm số mỗi nhóm dao động từ 0 đến 40.</p>
-        <div id="traits-output"></div>
-        <button onclick="location.reload()" style="padding: 10px 20px; background:#95a5a6; color:white; border:none; border-radius:4px; cursor:pointer; margin-top:20px;">Làm lại</button>
+        <h2 style="text-align:center; margin-bottom: 10px; font-size: 1.8em; color: var(--text-main);">Hồ sơ Tính cách của Bạn</h2>
+        <p style="text-align:center; color: var(--text-sub); margin-bottom: 40px;">Biểu đồ trực quan hóa 5 khía cạnh cốt lõi</p>
+        
+        <div class="chart-wrapper">
+            <canvas id="radarChart"></canvas>
+        </div>
+
+        <div id="traits-output" class="result-grid"></div>
+
+        <div style="margin-top: 60px; text-align: center; border-top: 1px dashed var(--border); padding-top: 30px;">
+            <button onclick="location.reload()" style="background:#78716C; color:white; display: inline-flex; width: auto;">
+                🔄 Làm bài mới
+            </button>
+            <!-- Sửa text để người dùng hiểu rõ hơn -->
+            <button onclick="window.print()" style="background:#3B82F6; color:white; margin-left: 10px; display: inline-flex; width: auto;">
+                🖨️ In kết quả / Lưu PDF
+            </button>
+        </div>
     </div>
 </div>
 
 <script>
-    // Dữ liệu 50 câu hỏi từ PDF (đã dịch sang tiếng Việt để dễ sử dụng)
-    const questions = [
-        "Là linh hồn của các bữa tiệc.", // 1
-        "Ít quan tâm đến người khác.", // 2
-        "Luôn chuẩn bị sẵn sàng.", // 3
-        "Dễ bị căng thẳng.", // 4
-        "Có vốn từ vựng phong phú.", // 5
-        "Không nói nhiều.", // 6
-        "Quan tâm đến mọi người.", // 7
-        "Thường để đồ đạc lung tung.", // 8
-        "Thường xuyên cảm thấy thư giãn.", // 9
-        "Gặp khó khăn khi hiểu các ý tưởng trừu tượng.", // 10
-        "Cảm thấy thoải mái khi ở quanh mọi người.", // 11
-        "Thường xúc phạm người khác.", // 12
-        "Chú ý đến các chi tiết.", // 13
-        "Hay lo lắng về mọi thứ.", // 14
-        "Có trí tưởng tượng sống động.", // 15
-        "Thường lui về phía sau (ít nổi bật).", // 16
-        "Đồng cảm với cảm xúc của người khác.", // 17
-        "Làm mọi thứ rối tung lên.", // 18
-        "Hiếm khi cảm thấy buồn bã.", // 19
-        "Không quan tâm đến các ý tưởng trừu tượng.", // 20
-        "Thường bắt đầu các cuộc trò chuyện.", // 21
-        "Không quan tâm đến vấn đề của người khác.", // 22
-        "Hoàn thành việc nhà ngay lập tức.", // 23
-        "Dễ bị làm phiền/quấy rầy.", // 24
-        "Có những ý tưởng xuất sắc.", // 25
-        "Có ít điều để nói.", // 26
-        "Có trái tim mềm yếu.", // 27
-        "Thường quên để đồ vật về đúng chỗ cũ.", // 28
-        "Dễ bị buồn bực.", // 29
-        "Không có trí tưởng tượng tốt.", // 30
-        "Nói chuyện với rất nhiều người khác nhau tại các bữa tiệc.", // 31
-        "Không thực sự quan tâm đến người khác.", // 32
-        "Thích sự trật tự.", // 33
-        "Tâm trạng thay đổi thất thường.", // 34
-        "Nhanh chóng hiểu mọi việc.", // 35
-        "Không thích thu hút sự chú ý về mình.", // 36
-        "Dành thời gian cho người khác.", // 37
-        "Trốn tránh bổn phận/trách nhiệm.", // 38
-        "Thường xuyên thay đổi tâm trạng.", // 39
-        "Sử dụng những từ ngữ khó hiểu.", // 40
-        "Không ngại trở thành trung tâm của sự chú ý.", // 41
-        "Cảm nhận được cảm xúc của người khác.", // 42
-        "Tuân theo lịch trình/thời gian biểu.", // 43
-        "Dễ bị kích động/cáu kỉnh.", // 44
-        "Dành thời gian suy ngẫm về mọi thứ.", // 45
-        "Im lặng khi ở bên người lạ.", // 46
-        "Làm cho mọi người cảm thấy thoải mái.", // 47
-        "Khắt khe/kỹ lưỡng trong công việc.", // 48
-        "Thường cảm thấy buồn bã.", // 49
-        "Tràn đầy ý tưởng." // 50
+    // API CONFIG
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEHbnZlScA5YiUj620n01ETJtDsATD6092HR-BpXttMkjLjPeUDG3d7KnbH2o98CQaIA/exec";
+
+    const questionsData = [
+        { id: 1, text: "Là linh hồn của các bữa tiệc.", trait: "E", sign: 1 },
+        { id: 2, text: "Ít quan tâm đến người khác.", trait: "A", sign: -1 },
+        { id: 3, text: "Luôn chuẩn bị sẵn sàng.", trait: "C", sign: 1 },
+        { id: 4, text: "Dễ bị căng thẳng.", trait: "N", sign: -1 },
+        { id: 5, text: "Có vốn từ vựng phong phú.", trait: "O", sign: 1 },
+        { id: 6, text: "Không nói nhiều.", trait: "E", sign: -1 },
+        { id: 7, text: "Quan tâm đến mọi người.", trait: "A", sign: 1 },
+        { id: 8, text: "Thường để đồ đạc lung tung.", trait: "C", sign: -1 },
+        { id: 9, text: "Thường xuyên cảm thấy thư giãn.", trait: "N", sign: 1 },
+        { id: 10, text: "Gặp khó khăn khi hiểu các ý tưởng trừu tượng.", trait: "O", sign: -1 },
+        { id: 11, text: "Cảm thấy thoải mái khi ở quanh mọi người.", trait: "E", sign: 1 },
+        { id: 12, text: "Thường xúc phạm người khác.", trait: "A", sign: -1 },
+        { id: 13, text: "Chú ý đến các chi tiết.", trait: "C", sign: 1 },
+        { id: 14, text: "Hay lo lắng về mọi thứ.", trait: "N", sign: -1 },
+        { id: 15, text: "Có trí tưởng tượng sống động.", trait: "O", sign: 1 },
+        { id: 16, text: "Thường lui về phía sau (ít nổi bật).", trait: "E", sign: -1 },
+        { id: 17, text: "Đồng cảm với cảm xúc của người khác.", trait: "A", sign: 1 },
+        { id: 18, text: "Làm mọi thứ rối tung lên.", trait: "C", sign: -1 },
+        { id: 19, text: "Hiếm khi cảm thấy buồn bã.", trait: "N", sign: 1 },
+        { id: 20, text: "Không quan tâm đến các ý tưởng trừu tượng.", trait: "O", sign: -1 },
+        { id: 21, text: "Thường bắt đầu các cuộc trò chuyện.", trait: "E", sign: 1 },
+        { id: 22, text: "Không quan tâm đến vấn đề của người khác.", trait: "A", sign: -1 },
+        { id: 23, text: "Hoàn thành việc nhà ngay lập tức.", trait: "C", sign: 1 },
+        { id: 24, text: "Dễ bị làm phiền/quấy rầy.", trait: "N", sign: -1 },
+        { id: 25, text: "Có những ý tưởng xuất sắc.", trait: "O", sign: 1 },
+        { id: 26, text: "Có ít điều để nói.", trait: "E", sign: -1 },
+        { id: 27, text: "Có trái tim mềm yếu.", trait: "A", sign: 1 },
+        { id: 28, text: "Thường quên để đồ vật về đúng chỗ cũ.", trait: "C", sign: -1 },
+        { id: 29, text: "Dễ bị buồn bực.", trait: "N", sign: -1 },
+        { id: 30, text: "Không có trí tưởng tượng tốt.", trait: "O", sign: -1 },
+        { id: 31, text: "Nói chuyện với rất nhiều người khác nhau tại các bữa tiệc.", trait: "E", sign: 1 },
+        { id: 32, text: "Không thực sự quan tâm đến người khác.", trait: "A", sign: -1 },
+        { id: 33, text: "Thích sự trật tự.", trait: "C", sign: 1 },
+        { id: 34, text: "Tâm trạng thay đổi thất thường.", trait: "N", sign: -1 },
+        { id: 35, text: "Nhanh chóng hiểu mọi việc.", trait: "O", sign: 1 },
+        { id: 36, text: "Không thích thu hút sự chú ý về mình.", trait: "E", sign: -1 },
+        { id: 37, text: "Dành thời gian cho người khác.", trait: "A", sign: 1 },
+        { id: 38, text: "Trốn tránh bổn phận/trách nhiệm.", trait: "C", sign: -1 },
+        { id: 39, text: "Thường xuyên thay đổi tâm trạng.", trait: "N", sign: -1 },
+        { id: 40, text: "Sử dụng những từ ngữ khó hiểu.", trait: "O", sign: 1 },
+        { id: 41, text: "Không ngại trở thành trung tâm của sự chú ý.", trait: "E", sign: 1 },
+        { id: 42, text: "Cảm nhận được cảm xúc của người khác.", trait: "A", sign: 1 },
+        { id: 43, text: "Tuân theo lịch trình/thời gian biểu.", trait: "C", sign: 1 },
+        { id: 44, text: "Dễ bị kích động/cáu kỉnh.", trait: "N", sign: -1 },
+        { id: 45, text: "Dành thời gian suy ngẫm về mọi thứ.", trait: "O", sign: 1 },
+        { id: 46, text: "Im lặng khi ở bên người lạ.", trait: "E", sign: -1 },
+        { id: 47, text: "Làm cho mọi người cảm thấy thoải mái.", trait: "A", sign: 1 },
+        { id: 48, text: "Khắt khe/kỹ lưỡng trong công việc.", trait: "C", sign: 1 },
+        { id: 49, text: "Thường cảm thấy buồn bã.", trait: "N", sign: -1 },
+        { id: 50, text: "Tràn đầy ý tưởng.", trait: "O", sign: 1 }
     ];
 
-    // Tạo giao diện câu hỏi
+    const ITEMS_PER_PAGE = 10;
+    let currentPage = 1;
+    const totalPages = Math.ceil(questionsData.length / ITEMS_PER_PAGE);
+    let userAnswers = {};
+
     const container = document.getElementById('questions-container');
-    questions.forEach((q, index) => {
-        const num = index + 1;
-        const html = `
-            <div class="question-item">
-                <span class="question-text">${num}. Tôi ${q}</span>
-                <div class="options">
-                    <label data-val="1"><input type="radio" name="q${num}" value="1"><span>Rất không</span></label>
-                    <label data-val="2"><input type="radio" name="q${num}" value="2"><span>Không</span></label>
-                    <label data-val="3"><input type="radio" name="q${num}" value="3"><span>Trung lập</span></label>
-                    <label data-val="4"><input type="radio" name="q${num}" value="4"><span>Đồng ý</span></label>
-                    <label data-val="5"><input type="radio" name="q${num}" value="5"><span>Rất đồng ý</span></label>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', html);
-    });
+    const progressBar = document.getElementById('progress-bar');
+    const pageIndicator = document.getElementById('page-indicator');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnSubmit = document.getElementById('btn-submit');
+    const errorMsg = document.getElementById('error-msg');
 
-    // Lấy giá trị trả lời (trả về 0 nếu chưa chọn)
-    function getVal(qNum) {
-        const radios = document.getElementsByName(`q${qNum}`);
-        for (let r of radios) {
-            if (r.checked) return parseInt(r.value);
-        }
-        return 0;
-    }
+    function init() { renderPage(currentPage); }
 
-    function calculateScore() {
-        // Kiểm tra xem đã trả lời hết chưa
-        for (let i = 1; i <= 50; i++) {
-            if (getVal(i) === 0) {
-                document.getElementById('error-msg').style.display = 'block';
-                // Cuộn đến câu hỏi chưa trả lời
-                const unfinished = document.getElementsByName(`q${i}`)[0];
-                unfinished.scrollIntoView({behavior: "smooth", block: "center"});
-                return;
-            }
-        }
-        document.getElementById('error-msg').style.display = 'none';
-
-        // Lấy giá trị từng câu hỏi để đưa vào công thức
-        // Lưu ý: Mảng bắt đầu từ 0, nhưng công thức dùng số câu hỏi (1-50). 
-        // Hàm V(x) sẽ lấy giá trị câu hỏi số x.
-        const V = (x) => getVal(x);
-
-        // --- CÔNG THỨC TÍNH ĐIỂM (Dựa trên Trang 9 của PDF) ---
+    function renderPage(page) {
+        container.innerHTML = "";
+        errorMsg.style.display = 'none';
         
-        // 1. Extroversion (Hướng ngoại)
-        // E = 20 + (1) - (6) + (11) - (16) + (21) - (26) + (31) - (36) + (41) - (46)
-        let E = 20 + V(1) - V(6) + V(11) - V(16) + V(21) - V(26) + V(31) - V(36) + V(41) - V(46);
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        const pageQuestions = questionsData.slice(start, end);
 
-        // 2. Agreeableness (Dễ chịu/Hòa đồng)
-        // A = 14 - (2) + (7) - (12) + (17) - (22) + (27) - (32) + (37) + (42) + (47)
-        let A = 14 - V(2) + V(7) - V(12) + V(17) - V(22) + V(27) - V(32) + V(37) + V(42) + V(47);
-
-        // 3. Conscientiousness (Tận tâm)
-        // C = 14 + (3) - (8) + (13) - (18) + (23) - (28) + (33) - (38) + (43) + (48)
-        let C = 14 + V(3) - V(8) + V(13) - V(18) + V(23) - V(28) + V(33) - V(38) + V(43) + V(48);
-
-        // 4. Neuroticism (Tâm lý bất ổn/Nhạy cảm)
-        // N = 38 - (4) + (9) - (14) + (19) - (24) - (29) - (34) - (39) - (44) - (49)
-        let N = 38 - V(4) + V(9) - V(14) + V(19) - V(24) - V(29) - V(34) - V(39) - V(44) - V(49);
-
-        // 5. Openness to Experience (Cởi mở/Sẵn sàng trải nghiệm)
-        // O = 8 + (5) - (10) + (15) - (20) + (25) - (30) + (35) + (40) + (45) + (50)
-        let O = 8 + V(5) - V(10) + V(15) - V(20) + V(25) - V(30) + V(35) + V(40) + V(45) + V(50);
-
-        displayResults(E, A, C, N, O);
+        pageQuestions.forEach(q => {
+            const savedVal = userAnswers[q.id] || 0;
+            const html = `
+                <div class="question-item" id="q-item-${q.id}">
+                    <span class="question-text">${q.id}. Tôi ${q.text}</span>
+                    <div class="options">
+                        ${renderOptions(q.id, savedVal)}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+        updateUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function displayResults(E, A, C, N, O) {
-        document.getElementById('bfpt-form').style.display = 'none';
-        const resultContainer = document.getElementById('results');
-        const output = document.getElementById('traits-output');
-        resultContainer.style.display = 'block';
-
-        // Dữ liệu mô tả dựa trên PDF
-        const traits = [
-            {
-                name: "Extroversion (Hướng ngoại)",
-                score: E,
-                desc: "Tìm kiếm sự thỏa mãn từ bên ngoài bản thân hoặc trong cộng đồng.",
-                analysis: E > 20 
-                    ? "Bạn có xu hướng hòa đồng, thích giao tiếp, tràn đầy năng lượng và thích làm việc nhóm." 
-                    : "Bạn có xu hướng thích sự riêng tư, làm việc độc lập và dè dặt hơn trong các tình huống xã hội."
-            },
-            {
-                name: "Agreeableness (Dễ chịu/Hòa đồng)",
-                score: A,
-                desc: "Phản ánh mức độ điều chỉnh hành vi để phù hợp với người khác.",
-                analysis: A > 20 
-                    ? "Bạn lịch sự, dễ mến, tin tưởng và thích hợp tác với mọi người." 
-                    : "Bạn thẳng thắn, đôi khi hoài nghi, cạnh tranh và thích 'nói thẳng nói thật' hơn là làm hài lòng người khác."
-            },
-            {
-                name: "Conscientiousness (Tận tâm)",
-                score: C,
-                desc: "Trung thực, chăm chỉ, tuân thủ quy tắc và thích sự ngăn nắp.",
-                analysis: C > 20 
-                    ? "Bạn có tổ chức, kỷ luật, đáng tin cậy và luôn nỗ lực hoàn thành mục tiêu đề ra." 
-                    : "Bạn có xu hướng linh hoạt, tự phát, đôi khi bừa bộn và có thể thiếu sự cẩn trọng chi tiết."
-            },
-            {
-                name: "Neuroticism (Bất ổn tâm lý/Nhạy cảm)",
-                score: N,
-                desc: "Mức độ phản ứng cảm xúc với căng thẳng.",
-                analysis: N > 20 
-                    ? "Bạn dễ phản ứng mạnh với stress, hay lo âu, thay đổi tâm trạng và cảm nhận cảm xúc tiêu cực sâu sắc hơn." 
-                    : "Bạn ổn định về mặt cảm xúc, bình tĩnh, ít bị căng thẳng và không dễ bị tổn thương."
-            },
-            {
-                name: "Openness to Experience (Cởi mở)",
-                score: O,
-                desc: "Tìm kiếm trải nghiệm mới và theo đuổi tri thức.",
-                analysis: O > 20 
-                    ? "Bạn sáng tạo, tò mò, thích phiêu lưu và cởi mở với những ý tưởng trừu tượng hoặc mới lạ." 
-                    : "Bạn thực tế, thích sự quen thuộc, truyền thống và tập trung vào những gì cụ thể, rõ ràng."
-            }
-        ];
-
+    function renderOptions(qId, savedVal) {
         let html = '';
-        traits.forEach(t => {
-            // Giới hạn điểm trong khoảng 0-40 (đề phòng lỗi logic dù công thức đã chuẩn)
-            let safeScore = Math.max(0, Math.min(40, t.score));
-            let percentage = (safeScore / 40) * 100;
-            let color = "#3498db";
-            if (percentage < 30) color = "#95a5a6";
-            if (percentage > 70) color = "#2ecc71";
-
+        const labels = ["Rất không", "Không", "Trung lập", "Đồng ý", "Rất đồng ý"];
+        
+        for (let i = 1; i <= 5; i++) {
+            const isChecked = savedVal === i ? 'checked' : '';
             html += `
-                <div class="trait-card">
-                    <div class="trait-title">${t.name}</div>
-                    <div class="score-bar-container">
-                        <div class="score-bar" style="width: ${percentage}%; background-color: ${color};">${safeScore}/40</div>
+                <label class="option-label">
+                    <input type="radio" name="q${qId}" value="${i}" ${isChecked} onclick="saveAnswer(${qId}, ${i})">
+                    <div class="option-box">
+                        <span class="option-number">${i}</span>
+                        <span class="option-text">${labels[i-1]}</span>
                     </div>
-                    <div class="analysis"><strong>Phân tích:</strong> ${t.analysis}</div>
-                    <div class="trait-desc">${t.desc}</div>
+                </label>
+            `;
+        }
+        return html;
+    }
+
+    window.saveAnswer = function(qId, val) {
+        userAnswers[qId] = val;
+        errorMsg.style.display = 'none';
+        updateUI();
+    };
+
+    function updateUI() {
+        const answeredCount = Object.keys(userAnswers).length;
+        const progress = (answeredCount / 50) * 100;
+        progressBar.style.width = `${Math.max(5, progress)}%`;
+        pageIndicator.innerText = `Trang ${currentPage} / ${totalPages}`;
+
+        if (currentPage === 1) {
+            btnPrev.disabled = true;
+            btnPrev.style.opacity = "0";
+        } else {
+            btnPrev.disabled = false;
+            btnPrev.style.opacity = "1";
+        }
+
+        if (currentPage === totalPages) {
+            btnNext.style.display = 'none';
+            btnSubmit.style.display = 'flex';
+        } else {
+            btnNext.style.display = 'flex';
+            btnSubmit.style.display = 'none';
+        }
+    }
+
+    window.nextPage = function() {
+        if (validatePage()) { currentPage++; renderPage(currentPage); }
+    };
+    window.prevPage = function() {
+        if (currentPage > 1) { currentPage--; renderPage(currentPage); }
+    };
+
+    function validatePage() {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        const pageQuestions = questionsData.slice(start, end);
+        let allAnswered = true;
+        let firstUnansweredId = null;
+
+        pageQuestions.forEach(q => {
+            if (!userAnswers[q.id]) {
+                allAnswered = false;
+                if (!firstUnansweredId) firstUnansweredId = q.id;
+            }
+        });
+
+        if (!allAnswered) {
+            errorMsg.style.display = 'block';
+            if (firstUnansweredId) document.getElementById(`q-item-${firstUnansweredId}`).scrollIntoView({ behavior: "smooth", block: "center" });
+            return false;
+        }
+        return true;
+    }
+
+    /* --- LOGIC TÍNH TOÁN --- */
+    window.calculateScore = function() {
+        if (!validatePage()) return;
+        
+        let scores = { E: 20, A: 14, C: 14, N: 38, O: 8 };
+        questionsData.forEach(q => {
+            const val = userAnswers[q.id];
+            scores[q.trait] += (q.sign * val);
+        });
+        
+        for(let key in scores) scores[key] = Math.max(0, Math.min(40, scores[key]));
+
+        sendDataToSheet(scores);
+        displayResults(scores);
+    }
+
+    async function sendDataToSheet(scores) {
+        const notif = document.getElementById('status-notification');
+        if (!SCRIPT_URL) return;
+
+        notif.innerHTML = `<span style="animation: spin 1s linear infinite">⏳</span> Đang lưu kết quả...`;
+        notif.style.color = "#57534E";
+        notif.style.borderColor = "var(--primary)";
+        notif.style.display = "flex";
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(scores) 
+            });
+            notif.innerHTML = "✅ Đã lưu thành công!";
+            notif.style.color = "var(--success)";
+            notif.style.borderColor = "var(--success)";
+            setTimeout(() => { notif.style.display = 'none'; }, 3000);
+        } catch (error) {
+            notif.innerText = "⚠️ Không thể lưu (Lỗi mạng)";
+            notif.style.color = "#E11D48";
+        }
+    }
+
+    /* --- HIỂN THỊ KẾT QUẢ VỚI BẢNG MÀU MỚI --- */
+    function getAnalysis(traitCode, score) {
+        const level = score <= 15 ? 'low' : (score <= 28 ? 'mid' : 'high');
+        
+        // Bảng màu Pastel hiện đại cho từng nhóm tính cách
+        const traitColors = {
+            E: "#FF6B6B", // Pastel Red/Coral (Năng lượng)
+            A: "#1DD1A1", // Pastel Green (Hòa hợp)
+            C: "#54A0FF", // Pastel Blue (Tin cậy)
+            N: "#5F27CD", // Deep Purple (Cảm xúc sâu sắc)
+            O: "#FECA57"  // Pastel Yellow/Orange (Sáng tạo)
+        };
+
+        const data = {
+            E: {
+                name: "Hướng Ngoại (Extraversion)", color: traitColors.E, 
+                desc: "Mức độ tương tác xã hội và năng lượng.",
+                low: { text: "Bạn là người hướng nội, thích sự yên tĩnh và làm việc độc lập. Bạn sâu sắc và biết lắng nghe.", advice: "Tận dụng khả năng tập trung sâu của bạn." },
+                mid: { text: "Bạn cân bằng (Ambivert), linh hoạt giữa việc giao tiếp và dành thời gian riêng tư.", advice: "Duy trì sự cân bằng tuyệt vời này." },
+                high: { text: "Bạn hướng ngoại, tràn đầy năng lượng và thích là trung tâm sự chú ý.", advice: "Hãy dành chút thời gian tĩnh lặng để suy ngẫm." }
+            },
+            A: {
+                name: "Hòa Đồng (Agreeableness)", color: traitColors.A, 
+                desc: "Sự quan tâm đến sự hòa hợp và lòng trắc ẩn.",
+                low: { text: "Bạn thẳng thắn, lý trí và đôi khi hoài nghi. Bạn ưu tiên sự thật hơn cảm xúc.", advice: "Hãy thử đặt mình vào vị trí người khác nhiều hơn." },
+                mid: { text: "Bạn thân thiện nhưng biết giữ chính kiến. Bạn tốt bụng nhưng không dễ bị lợi dụng.", advice: "Tiếp tục giữ vững ranh giới cá nhân." },
+                high: { text: "Bạn rất giàu lòng trắc ẩn, vị tha và luôn giúp đỡ người khác.", advice: "Đừng quên chăm sóc nhu cầu của chính mình." }
+            },
+            C: {
+                name: "Tận Tâm (Conscientiousness)", color: traitColors.C, 
+                desc: "Tính kỷ luật, tổ chức và định hướng mục tiêu.",
+                low: { text: "Bạn ngẫu hứng, linh hoạt và không thích gò bó.", advice: "Sử dụng công cụ quản lý thời gian để tránh sót việc." },
+                mid: { text: "Bạn có trách nhiệm, làm việc hiệu quả nhưng vẫn biết tận hưởng cuộc sống.", advice: "Mức độ lý tưởng cho sự nghiệp bền vững." },
+                high: { text: "Bạn cực kỳ kỷ luật, ngăn nắp và cầu toàn.", advice: "Đừng quá khắt khe với bản thân khi gặp lỗi nhỏ." }
+            },
+            N: {
+                name: "Nhạy Cảm (Neuroticism)", color: traitColors.N, 
+                desc: "Mức độ phản ứng với stress và cảm xúc tiêu cực.",
+                low: { text: "Bạn có thần kinh thép, bình tĩnh và vững vàng trước áp lực.", advice: "Đừng kìm nén cảm xúc quá mức." },
+                mid: { text: "Bạn có đời sống cảm xúc phong phú, đôi khi lo âu nhưng vượt qua nhanh.", advice: "Học thiền định để cân bằng nhanh hơn." },
+                high: { text: "Bạn nhạy cảm, dễ lo âu và trải nghiệm cảm xúc mãnh liệt.", advice: "Tránh môi trường quá áp lực, tìm nơi yên tĩnh." }
+            },
+            O: {
+                name: "Cởi Mở (Openness)", color: traitColors.O, 
+                desc: "Sự sáng tạo, tò mò và sẵn sàng trải nghiệm.",
+                low: { text: "Bạn thực tế, thích sự quen thuộc và các giá trị truyền thống.", advice: "Thử trải nghiệm một điều mới mỗi tuần." },
+                mid: { text: "Bạn cởi mở học hỏi nhưng vẫn thực tế và chân phương.", advice: "Bạn là cầu nối giữa truyền thống và đổi mới." },
+                high: { text: "Bạn giàu trí tưởng tượng, sáng tạo và ghét sự nhàm chán.", advice: "Biến ý tưởng thành hiện thực bằng kế hoạch cụ thể." }
+            }
+        };
+        return { ...data[traitCode], ...data[traitCode][level] };
+    }
+
+    function displayResults(scores) {
+        document.getElementById('quiz-area').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Hướng Ngoại (E)', 'Hòa Đồng (A)', 'Tận Tâm (C)', 'Nhạy Cảm (N)', 'Cởi Mở (O)'],
+                datasets: [{
+                    label: 'Điểm số của bạn',
+                    data: [scores.E, scores.A, scores.C, scores.N, scores.O],
+                    backgroundColor: 'rgba(99, 102, 241, 0.2)', // Indigo nhạt
+                    borderColor: '#6366F1', // Indigo đậm
+                    borderWidth: 3,
+                    pointBackgroundColor: ['#FF6B6B', '#1DD1A1', '#54A0FF', '#5F27CD', '#FECA57'], // Màu từng điểm khớp với thẻ
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#6366F1',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        suggestedMin: 0,
+                        suggestedMax: 40,
+                        ticks: { stepSize: 10, backdropColor: 'transparent', font: {size: 10} },
+                        pointLabels: {
+                            font: { size: 12, family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
+                            color: '#292524'
+                        },
+                        grid: { color: '#E7E5E4' },
+                        angleLines: { color: '#E7E5E4' }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        const output = document.getElementById('traits-output');
+        let html = '';
+        ['E', 'A', 'C', 'N', 'O'].forEach(key => {
+            const info = getAnalysis(key, scores[key]);
+            html += `
+                <div class="trait-card" style="--card-color: ${info.color}">
+                    <div class="trait-header">
+                        <div class="trait-title">${info.name}</div>
+                        <div class="trait-score">${scores[key]}/40</div>
+                    </div>
+                    <div class="score-track">
+                        <div class="score-fill" style="width: ${(scores[key]/40)*100}%;"></div>
+                    </div>
+                    <div style="color: #57534E; font-size: 0.95em; line-height: 1.6; text-align: justify;">${info.text}</div>
+                    <div class="advice-box">
+                        <span class="advice-title" style="color: ${info.color}">💡 LỜI KHUYÊN</span>
+                        ${info.advice}
+                    </div>
                 </div>
             `;
         });
-
         output.innerHTML = html;
-        window.scrollTo(0, 0);
     }
+
+    init();
 </script>
 
 </body>
